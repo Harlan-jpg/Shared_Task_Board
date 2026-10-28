@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Simple Task Board
 
-## Getting Started
+A shared task list with a **React (Next.js) web app** and a **SwiftUI iOS app**.
+Both apps read and write the same Firestore collection, `tasks`, so a task added in
+one app shows up in the other right away.
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+.
+├── app/page.js          Web: main page (signs in, loads tasks)
+├── app/layout.js        Web: page frame (title)
+├── components/          Web: TaskForm, TaskList, TaskItem
+├── lib/firebase.js      Web: Firebase connection
+├── ios/TaskBoard/       SwiftUI files (add these to your Xcode project)
+├── firestore.rules      Firestore security rules
+└── TEST_RESULTS.md      the 8 required test cases
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Task fields
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+| Field | Type | Rule |
+|---|---|---|
+| title | String | 1–80 characters after trimming |
+| completed | Boolean | starts as `false` |
+| createdAt | Timestamp | server timestamp |
+| createdBy | String | the signed-in user's UID |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Users sign in with **Firebase Anonymous Auth**, so there is no login screen. Every user still gets a UID.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 1. Firebase setup (do this once)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Go to https://console.firebase.google.com and create a project.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Authentication → Get started → Sign-in method → Anonymous → Enable.**
 
-## Deploy on Vercel
+3. **Firestore Database → Create database → Production mode.**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. **Firestore → Rules:** paste the contents of `firestore.rules`, then click **Publish**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. The first time a client loads the list, Firestore may need an index for
+   `orderBy("createdAt")`. A single-field index is created automatically, so this usually just works.
+
+---
+
+## 2. Web app (Next.js)
+
+Requires Node.js 18 or newer. The web app is at the root of this repo.
+
+```bash
+npm install
+
+cp .env.example .env.local     # then fill in your Firebase values
+
+npm run dev
+```
+
+Open http://localhost:3000.
+
+The values for `.env.local` come from **Firebase console → Project settings →
+Your apps → Add app → Web (</>)**. Restart `npm run dev` after changing `.env.local`.
+
+---
+
+## 3. iOS app (SwiftUI)
+
+Requires a Mac with Xcode 15 or newer.
+
+1. In Xcode, choose **File → New → Project → iOS → App**. Name it `TaskBoard`, set
+   Interface to **SwiftUI** and Language to **Swift**.
+
+2. In the Firebase console, go to **Project settings → Add app → iOS** and enter the same
+   **bundle ID** as your Xcode project (for example `com.yourname.TaskBoard`).
+
+3. Download **GoogleService-Info.plist** and drag it into the Xcode project
+   (tick "Copy items if needed" and your app target).
+
+4. **File → Add Package Dependencies…** → paste
+   `https://github.com/firebase/firebase-ios-sdk` → add **FirebaseAuth** and
+   **FirebaseFirestore** to the app target.
+
+5. Delete Xcode's starter `ContentView.swift` and `TaskBoardApp.swift`, then drag in
+   the four files from `ios/TaskBoard/`:
+   `TaskBoardApp.swift`, `ContentView.swift`, `TaskItem.swift`, `TaskRow.swift`.
+
+6. Pick an iPhone simulator and press **Run (⌘R)**.
+
+---
+
+## 4. Android (Jetpack Compose)
+
+Not started yet. The plan is to use the same `tasks` collection and the same anonymous sign-in.
+
+---
+
+## Environment / secrets
+
+These files are **not committed** (see `.gitignore`). Send them to the reviewers and instructor directly:
+
+- `.env.local`: Firebase web config
+- `GoogleService-Info.plist`: Firebase iOS config
+
+## Security rules summary
+
+- Reading or writing anything requires sign-in (`request.auth != null`).
+
+- **Create:** the task must have exactly `title`, `completed`, `createdAt` and `createdBy`. The title must be a 1–80
+  character string after trimming, `completed` must be `false`, `createdAt` must be the
+  server time, and `createdBy` must be your UID.
+- **Update:** only `completed` can change, and it must be a boolean.
+
+- **Delete:** never allowed.

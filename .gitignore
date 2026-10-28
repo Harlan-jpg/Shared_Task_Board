@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# keep the example env file (it has no secrets)
+!.env.example
+
+# Firebase app config files (send to instructor directly, don't commit)
+GoogleService-Info.plist
+google-services.json
+
+# Xcode
+xcuserdata/
+DerivedData/
