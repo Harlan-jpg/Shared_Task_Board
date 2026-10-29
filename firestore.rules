@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /tasks/{taskId} {
+
+      // request auth is empty when nobody is signed in
+      allow read: if request.auth != null;
+
+      // hasAll and hasOnly mean exactly these four fields
+      // request time is the server time so createdAt must be a server timestamp
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['title', 'completed', 'createdAt', 'createdBy'])
+        && request.resource.data.keys().hasOnly(['title', 'completed', 'createdAt', 'createdBy'])
+        && request.resource.data.title is string
+        && request.resource.data.title.trim().size() >= 1
+        && request.resource.data.title.trim().size() <= 80
+        && request.resource.data.completed == false
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid;
+
+      // diff compares old and new so only completed is allowed to change
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['completed'])
+        && request.resource.data.completed is bool;
+
+      allow delete: if false;
+    }
+  }
+}
