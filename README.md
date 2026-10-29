@@ -64,26 +64,15 @@ Your apps → Add app → Web (</>)**. Restart `npm run dev` after changing `.en
 
 ## 3. iOS app (SwiftUI)
 
-Requires a Mac with Xcode 15 or newer.
+Requires a Mac with Xcode 26 or newer.
 
-1. In Xcode, choose **File → New → Project → iOS → App**. Name it `TaskBoard`, set
-   Interface to **SwiftUI** and Language to **Swift**.
-
-2. In the Firebase console, go to **Project settings → Add app → iOS** and enter the same
-   **bundle ID** as your Xcode project (for example `com.yourname.TaskBoard`).
-
-3. Download **GoogleService-Info.plist** and drag it into the Xcode project
-   (tick "Copy items if needed" and your app target).
-
-4. **File → Add Package Dependencies…** → paste
-   `https://github.com/firebase/firebase-ios-sdk` → add **FirebaseAuth** and
-   **FirebaseFirestore** to the app target.
-
-5. Delete Xcode's starter `ContentView.swift` and `TaskBoardApp.swift`, then drag in
-   the four files from `ios/TaskBoard/`:
-   `TaskBoardApp.swift`, `ContentView.swift`, `TaskItem.swift`, `TaskRow.swift`.
-
-6. Pick an iPhone simulator and press **Run (⌘R)**.
+1. In the Firebase console, go to **Project settings → Add app → iOS** and use the bundle ID
+   **`com.harlantasci.TaskBoard`**.
+2. Download **GoogleService-Info.plist** and put it in the `ios/TaskBoard/` folder
+   (next to `ContentView.swift`).
+3. Open **`ios/TaskBoard.xcodeproj`** in Xcode. The Firebase package downloads by itself the
+   first time, which can take a few minutes.
+4. Pick an iPhone simulator and press **Run (⌘R)**.
 
 ---
 
